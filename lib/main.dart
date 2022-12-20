@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:your_friends/db_helper/database_helper.dart';
 import 'package:your_friends/screen/home_screen.dart';
 
 void main() {
+
+  WidgetsFlutterBinding.ensureInitialized();
+  DatabaseHelper().initDatabase();
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    print(DatabaseHelper().pathDatabase);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

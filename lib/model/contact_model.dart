@@ -2,27 +2,27 @@ class ContactModel {
   final String name;
   final String mobileNo;
   final String email;
-  final bool isFavorite;
+  final int isFavorite;
 
   ContactModel({
     required this.name,
     required this.mobileNo,
     required this.email,
-    required this.isFavorite,
+    this.isFavorite = 0,
   });
 
   Map<String, dynamic> toMap() {
     return {
       "name": name,
-      "mobileNo": mobileNo,
+      "mobile": mobileNo,
       "email": email,
-      "isFavorite": isFavorite
+      "favorite": isFavorite
     };
   }
 
   ContactModel.fromMap(Map<String, dynamic> cMap)
       : name = cMap['name'],
-        mobileNo = cMap['mobileNo'],
+        mobileNo = cMap['mobile'],
         email = cMap['email'],
-        isFavorite = cMap['isFavorite'];
+        isFavorite = cMap['favorite'];
 }

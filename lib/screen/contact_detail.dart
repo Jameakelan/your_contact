@@ -14,7 +14,7 @@ class ContactDetail extends StatefulWidget {
 
 class _ContactDetailState extends State<ContactDetail> {
 
-  late bool _isFavorite;
+  late int _isFavorite;
 
   @override
   void initState() {
@@ -115,11 +115,11 @@ class _ContactDetailState extends State<ContactDetail> {
                         child: IconButton(
                           icon: Icon(
                             Icons.favorite,
-                            color: (_isFavorite) ? Colors.red : Colors.grey,
+                            color: (_isFavorite == 1) ? Colors.red : Colors.grey,
                           ),
                           onPressed: () {
                             setState(() {
-                              _isFavorite = !_isFavorite;
+                              _isFavorite = (_isFavorite == 0) ? 1 : 0;
                             });
                           },
                         ),

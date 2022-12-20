@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:your_friends/db_helper/database_helper.dart';
+import 'package:your_friends/model/contact_model.dart';
 
 class AddScreen extends StatefulWidget {
   const AddScreen({Key? key}) : super(key: key);
@@ -15,6 +17,13 @@ class _AddScreenState extends State<AddScreen> {
 
   bool _validateNameEmpty = false;
   bool _validateMobileEmpty = false;
+
+  final DatabaseHelper _helper = DatabaseHelper();
+
+  void addContact(ContactModel model) async {
+    int result = await _helper.insert(model);
+    print("Result: $result");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,10 +62,11 @@ class _AddScreenState extends State<AddScreen> {
             ),
             TextField(
               controller: _textMobileController,
-              decoration:  InputDecoration(
+              decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   labelText: "Mobile",
-                  errorText: (_validateMobileEmpty) ? "Mobile can't be null" : null,
+                  errorText:
+                      (_validateMobileEmpty) ? "Mobile can't be null" : null,
                   prefixIcon: const Icon(Icons.phone)),
             ),
             const SizedBox(
@@ -73,11 +83,25 @@ class _AddScreenState extends State<AddScreen> {
               height: 15,
             ),
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _validateNameEmpty = _textNameController.text.isEmpty;
-                  _validateMobileEmpty = _textMobileController.text.isEmpty;
-                });
+              onPressed: () async {
+                // setState(() {
+                //   _validateNameEmpty = _textNameController.text.isEmpty;
+                //   _validateMobileEmpty = _textMobileController.text.isEmpty;
+                // });
+
+                if (!_validateNameEmpty && !_validateMobileEmpty) {
+                  String name = _textNameController.text;
+                  String mobile = _textMobileController.text;
+                  String email = _textEmailController.text;
+
+                  var model = ContactModel(
+                    name: name,
+                    mobileNo: mobile,
+                    email: email,
+                  );
+
+                  addContact(model);
+                }
               },
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigoAccent),

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ContactItem extends StatelessWidget {
+  final String title;
   final VoidCallback onDelete;
   final VoidCallback onPressed;
 
@@ -9,6 +10,7 @@ class ContactItem extends StatelessWidget {
     Key? key,
     required this.onDelete,
     required this.onPressed,
+    required this.title,
   }) : super(key: key);
 
   @override
@@ -24,18 +26,18 @@ class ContactItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                children: const [
-                  CircleAvatar(
+                children:  [
+                  const CircleAvatar(
                     backgroundColor: Colors.indigoAccent,
                     child: Icon(
                       Icons.person,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 10,
                   ),
-                  Text("Jame"),
+                  Text(title),
                 ],
               ),
               IconButton(
