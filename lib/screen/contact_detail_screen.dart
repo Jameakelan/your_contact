@@ -5,17 +5,17 @@ import 'package:your_friends/db_helper/database_helper.dart';
 import 'package:your_friends/model/contact_model.dart';
 import 'package:your_friends/screen/edit_screen.dart';
 
-class ContactDetail extends StatefulWidget {
+class ContactDetailScreen extends StatefulWidget {
 
   ContactModel contactModel;
 
-  ContactDetail({Key? key, required this.contactModel}) : super(key: key);
+  ContactDetailScreen({Key? key, required this.contactModel}) : super(key: key);
 
   @override
-  State<ContactDetail> createState() => _ContactDetailState();
+  State<ContactDetailScreen> createState() => _ContactDetailScreenState();
 }
 
-class _ContactDetailState extends State<ContactDetail> {
+class _ContactDetailScreenState extends State<ContactDetailScreen> {
   late int _isFavorite;
 
   final DatabaseHelper _helper = DatabaseHelper();

@@ -4,7 +4,7 @@ import 'package:your_friends/components/contact_item.dart';
 import 'package:your_friends/db_helper/database_helper.dart';
 import 'package:your_friends/model/contact_model.dart';
 import 'package:your_friends/screen/add_screen.dart';
-import 'package:your_friends/screen/contact_detail.dart';
+import 'package:your_friends/screen/contact_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -102,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
                            bool? isBack = await Navigator.push(
                               context,
                               MaterialPageRoute<bool>(
-                                builder: (context) => ContactDetail(
+                                builder: (context) => ContactDetailScreen(
                                   contactModel: contactModel,
                                 ),
                               ),
