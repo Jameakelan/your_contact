@@ -18,29 +18,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<ContactModel> contactsModel = [];
 
-  void deleteContact(int id) async {
+  late Future<List<ContactModel>> dataContacts;
 
+  void deleteContact(int id) async {
     int effectRow = await _helper.delete(id);
 
-    if(effectRow > 0) {
+    if (effectRow > 0) {
       refreshContact();
     }
   }
 
-  void refreshContact() async {
-    contactsModel = await _helper.getContacts();
-    setState(() {});
+  Future<void> refreshContact() async {
+    setState(() {
+      dataContacts = getContactsList();
+    });
+  }
+
+  Future<List<ContactModel>> getContactsList() async {
+    return await _helper.getContacts();
   }
 
   @override
   void initState() {
     super.initState();
     refreshContact();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
   }
 
   @override
@@ -63,16 +64,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-
-                       bool? isBack = await Navigator.push(
+                        bool? isBack = await Navigator.push(
                             context,
                             MaterialPageRoute<bool>(
                                 builder: (context) => const AddScreen()));
 
-                       if (isBack != null) {
-                         refreshContact();
-                       }
-
+                        if (isBack != null) {
+                          refreshContact();
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.indigoAccent,
@@ -89,40 +88,54 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: size.height * 0.8,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: ListView.builder(
-                    itemCount: contactsModel.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                            left: 8, top: 8, right: 8, bottom: 4),
-                        child: ContactItem(
-                          title: contactsModel[index].name ?? "ไม่พบข้อมูล",
-                          onPressed: () async {
-                            var contactModel = contactsModel[index];
-                           bool? isBack = await Navigator.push(
-                              context,
-                              MaterialPageRoute<bool>(
-                                builder: (context) => ContactDetailScreen(
-                                  contactModel: contactModel,
-                                ),
+                  child: FutureBuilder(
+                    future: dataContacts,
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<ContactModel>> snapshot) {
+                      if (snapshot.hasError) {
+                        return const Text("Got an Error");
+                      }
+
+                      if (snapshot.hasData) {
+                        return ListView.builder(
+                          itemCount: snapshot.data?.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 8, top: 8, right: 8, bottom: 4),
+                              child: ContactItem(
+                                title:
+                                    snapshot.data?[index].name ?? "ไม่พบข้อมูล",
+                                onPressed: () async {
+                                  var contactModel = snapshot.data![index];
+
+                                  bool? isBack = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute<bool>(
+                                      builder: (context) => ContactDetailScreen(
+                                        contactModel: contactModel,
+                                      ),
+                                    ),
+                                  );
+
+                                  if (isBack != null) {
+                                    refreshContact();
+                                  }
+                                },
+                                onDelete: () {
+                                  int? id = snapshot.data?[index].id;
+
+                                  if (id != null) {
+                                    deleteContact(id);
+                                  }
+                                },
                               ),
                             );
-
-                            if (isBack != null) {
-                              refreshContact();
-                            }
                           },
-                          onDelete: () {
-                            int? id = contactsModel[index].id;
+                        );
+                      }
 
-                            print("id: ${id}");
-
-                            if (id != null) {
-                              deleteContact(id);
-                            }
-                          },
-                        ),
-                      );
+                      return const Text("Loading data...");
                     },
                   ),
                 ),
