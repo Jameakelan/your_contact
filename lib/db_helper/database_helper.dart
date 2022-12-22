@@ -31,6 +31,7 @@ class DatabaseHelper {
 
   Future<Database> initDatabase() async {
     Directory directory = await getApplicationDocumentsDirectory();
+
     _pathDatabase = "${directory.path}/$_db.db";
 
     var database = await openDatabase(_pathDatabase,
@@ -40,8 +41,17 @@ class DatabaseHelper {
   }
 
   Future<void> _createDatabase(Database db, int version) async {
-    await db.execute(
-        "CREATE TABLE $_table ($_colId INTEGER PRIMARY KEY AUTOINCREMENT, $_colName TEXT, $_colMobile TEXT, $_colEmail TEXT, $_colFavorite INTEGER)");
+    // await db.execute(
+    //     "CREATE TABLE $_table ($_colId INTEGER PRIMARY KEY AUTOINCREMENT, $_colName TEXT, $_colMobile TEXT, $_colEmail TEXT, $_colFavorite INTEGER)");
+    await db.execute(''' 
+    CREATE TABLE $_table (
+    $_colId INTEGER PRIMARY KEY AUTOINCREMENT,
+    $_colName TEXT,
+    $_colMobile TEXT,
+    $_colEmail TEXT,
+    $_colFavorite INTEGER
+    )
+   ''');
   }
 
   Future<int> insert(ContactModel contact) async {
@@ -51,21 +61,65 @@ class DatabaseHelper {
       _colName: contact.name,
       _colMobile: contact.mobileNo,
       _colEmail: contact.email,
-      _colFavorite: contact.isFavorite
+      _colFavorite: contact.favorite
     };
 
     var result = await db.insert(_table, insertValue);
     return result;
   }
 
-  Future<List<ContactModel>> getContacts() async {
+  Future<int> delete(int id) async {
+    var db = await database;
 
+    var effectRow =
+        await db.delete(_table, where: '$_colId = ?', whereArgs: [id]);
+    return effectRow;
+  }
+
+  Future<int> update(ContactModel model) async {
+    var db = await database;
+    var effectRow = await db.update(_table, model.toMap(),
+        where: '$_colId = ?', whereArgs: [model.id]);
+    return effectRow;
+  }
+
+  Future<int> updateFavorite(int id, int favorite) async {
+    var db = await database;
+
+    var updateValue = {
+      _colFavorite: favorite,
+    };
+
+    var effectRow = await db
+        .update(_table, updateValue, where: '$_colId = ?', whereArgs: [id]);
+
+    return effectRow;
+  }
+
+  Future<ContactModel?> getContactById(int id) async {
+    var db = await database;
+
+    var contactMap = await db.query(
+      _table,
+      columns: [_colId, _colName, _colMobile, _colEmail, _colFavorite],
+      where: '$_colId = ?',
+      whereArgs: [id],
+    );
+
+    if (contactMap.isNotEmpty) {
+      return ContactModel.fromMap(contactMap.first);
+    }
+
+    return null;
+  }
+
+  Future<List<ContactModel>> getContacts() async {
     var db = await database;
 
     List<ContactModel> contacts = [];
 
     var contactsMap = await db.query(_table,
-        columns: [_colName, _colMobile, _colEmail, _colFavorite]);
+        columns: [_colId, _colName, _colMobile, _colEmail, _colFavorite]);
 
     // var contactsMap = await db.rawQuery("SELECT * FROM $_table");
 
@@ -74,5 +128,10 @@ class DatabaseHelper {
     }
 
     return contacts;
+  }
+
+  Future<void> close() async {
+    var db = await database;
+    db.close();
   }
 }

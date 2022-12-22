@@ -1,32 +1,47 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:your_friends/db_helper/database_helper.dart';
+import 'package:your_friends/components/show_dialog.dart';
 import 'package:your_friends/model/contact_model.dart';
 
-class AddScreen extends StatefulWidget {
-  const AddScreen({Key? key}) : super(key: key);
+import '../db_helper/database_helper.dart';
+
+class EditScreen extends StatefulWidget {
+  final ContactModel contact;
+
+  const EditScreen({Key? key, required this.contact}) : super(key: key);
 
   @override
-  State<AddScreen> createState() => _AddScreenState();
+  State<EditScreen> createState() => _EditScreenState();
 }
 
-class _AddScreenState extends State<AddScreen> {
+class _EditScreenState extends State<EditScreen> {
+  late ContactModel contact;
+
   final TextEditingController _textNameController = TextEditingController();
   final TextEditingController _textMobileController = TextEditingController();
   final TextEditingController _textEmailController = TextEditingController();
 
   bool _validateNameEmpty = false;
   bool _validateMobileEmpty = false;
+  bool _isEdit = false;
 
   final DatabaseHelper _helper = DatabaseHelper();
 
-  void addContact(ContactModel model) async {
-    int result = await _helper.insert(model);
+  void initTextField() {
+    _textNameController.text = contact.name;
+    _textMobileController.text = contact.mobileNo;
+    _textEmailController.text = contact.email;
+  }
 
-    // more then 0 means it can insert value
-    if(result > 0) {
-      Navigator.pop(context, true);
-    }
+  void updateContact() {}
+
+  @override
+  void initState() {
+    super.initState();
+
+    /// Setup
+    contact = widget.contact.copyWith();
+    initTextField();
   }
 
   @override
@@ -35,7 +50,15 @@ class _AddScreenState extends State<AddScreen> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context, true);
+            if (_isEdit) {
+              dialogBuilder(
+                  context: context,
+                  onPressYes: () {
+                    Navigator.pop(context, true);
+                  });
+            } else {
+              Navigator.pop(context, true);
+            }
           },
           icon: const Icon(
             Icons.arrow_back,
@@ -44,7 +67,7 @@ class _AddScreenState extends State<AddScreen> {
         ),
         title: const Center(
             child: Text(
-          "Add Contact",
+          "Edit Contact",
           style: TextStyle(fontSize: 20),
         )),
       ),
@@ -54,10 +77,14 @@ class _AddScreenState extends State<AddScreen> {
           children: [
             TextField(
               controller: _textNameController,
+              onChanged: (text) {
+                _isEdit = true;
+                contact.name = text;
+              },
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 labelText: "Name",
-                errorText: (_validateNameEmpty) ? "Name can't be null" : null,
+                // errorText: (_validateNameEmpty) ? "Name can't be null" : null,
                 prefixIcon: const Icon(Icons.person),
               ),
             ),
@@ -66,11 +93,15 @@ class _AddScreenState extends State<AddScreen> {
             ),
             TextField(
               controller: _textMobileController,
+              onChanged: (text) {
+                _isEdit = true;
+                contact.mobileNo = text;
+              },
               decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   labelText: "Mobile",
-                  errorText:
-                      (_validateMobileEmpty) ? "Mobile can't be null" : null,
+                  // errorText:
+                  // (_validateMobileEmpty) ? "Mobile can't be null" : null,
                   prefixIcon: const Icon(Icons.phone)),
             ),
             const SizedBox(
@@ -78,6 +109,10 @@ class _AddScreenState extends State<AddScreen> {
             ),
             TextField(
               controller: _textEmailController,
+              onChanged: (text) {
+                _isEdit = true;
+                contact.email = text;
+              },
               decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: "E-mail",
@@ -87,7 +122,7 @@ class _AddScreenState extends State<AddScreen> {
               height: 15,
             ),
             ElevatedButton(
-              onPressed: () async {
+              onPressed: () {
                 setState(() {
                   _validateNameEmpty = _textNameController.text.isEmpty;
                   _validateMobileEmpty = _textMobileController.text.isEmpty;
@@ -95,22 +130,14 @@ class _AddScreenState extends State<AddScreen> {
 
                 if (!_validateNameEmpty && !_validateMobileEmpty) {
 
-                  String name = _textNameController.text;
-                  String mobile = _textMobileController.text;
-                  String email = _textEmailController.text;
-
-                  var model = ContactModel(
-                    name: name,
-                    mobileNo: mobile,
-                    email: email,
-                  );
-
-                  addContact(model);
+                  _helper.update(contact).then((value) {
+                    Navigator.pop(context, true);
+                  });
                 }
               },
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigoAccent),
-              child: const Text("Add Contact"),
+              child: const Text("Edit Contact"),
             )
           ],
         ),

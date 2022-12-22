@@ -1,25 +1,69 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:your_friends/db_helper/database_helper.dart';
 import 'package:your_friends/model/contact_model.dart';
+import 'package:your_friends/screen/edit_screen.dart';
 
 class ContactDetail extends StatefulWidget {
-  final ContactModel contactModel;
 
-  const ContactDetail({Key? key, required this.contactModel}) : super(key: key);
+  ContactModel contactModel;
+
+  ContactDetail({Key? key, required this.contactModel}) : super(key: key);
 
   @override
   State<ContactDetail> createState() => _ContactDetailState();
 }
 
 class _ContactDetailState extends State<ContactDetail> {
-
   late int _isFavorite;
+
+  final DatabaseHelper _helper = DatabaseHelper();
+
+  void updateFavorite(ContactModel model) {
+    int? id = model.id;
+
+    if (id != null) {
+      _helper.updateFavorite(id, _isFavorite);
+    }
+  }
+
+  void refreshContactDetail() async {
+    var id = widget.contactModel.id;
+    if (id != null) {
+      var contact = await _helper.getContactById(id);
+      if (contact != null) {
+        setState(() {
+          widget.contactModel = contact;
+        });
+      }
+    }
+  }
+
+  void launchCallsIntent(String mobileNo) async {
+    var url = Uri.parse("tel:$mobileNo");
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  void launchSMSIntent(String mobileNo) async {
+    var url = Uri.parse('sms:$mobileNo');
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _isFavorite = widget.contactModel.isFavorite;
+    _isFavorite = widget.contactModel.favorite;
   }
 
   @override
@@ -30,7 +74,7 @@ class _ContactDetailState extends State<ContactDetail> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(context, true);
           },
           icon: const Icon(
             Icons.arrow_back,
@@ -39,7 +83,22 @@ class _ContactDetailState extends State<ContactDetail> {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () async {
+              bool? isBack = await Navigator.push(
+                  context,
+                  MaterialPageRoute<bool>(
+                      builder: (context) => EditScreen(
+                            contact: widget.contactModel,
+                          )));
+
+              if (isBack != null) {
+                refreshContactDetail();
+              }
+
+              // if (contactModel != null) {
+              //   widget.contactModel = contactModel;
+              // }
+            },
             child: const Text(
               "Edit",
               style: TextStyle(color: Colors.indigoAccent),
@@ -64,7 +123,7 @@ class _ContactDetailState extends State<ContactDetail> {
                   ),
                 ),
               ),
-               Padding(
+              Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   widget.contactModel.name,
@@ -82,16 +141,7 @@ class _ContactDetailState extends State<ContactDetail> {
                         child: IconButton(
                           icon: const Icon(Icons.message),
                           onPressed: () async {
-                            String phoneNumber = '1234567890';
-                            String message = 'Hello, this is a test message.';
-
-                            String url = 'sms:$phoneNumber?body=$message';
-
-                            if (await canLaunch(url)) {
-                              await launch(url);
-                            } else {
-                              throw 'Could not send SMS';
-                            }
+                            launchSMSIntent(widget.contactModel.mobileNo);
                           },
                         ),
                       ),
@@ -99,15 +149,7 @@ class _ContactDetailState extends State<ContactDetail> {
                         child: IconButton(
                           icon: const Icon(Icons.call),
                           onPressed: () async {
-                            String phoneNumber = '1234567890';
-
-                            String url = 'tel:$phoneNumber';
-
-                            if (await canLaunch(url)) {
-                              await launch("tel://214324234");
-                            } else {
-                              throw 'Could not call phone';
-                            }
+                            launchCallsIntent(widget.contactModel.mobileNo);
                           },
                         ),
                       ),
@@ -115,12 +157,13 @@ class _ContactDetailState extends State<ContactDetail> {
                         child: IconButton(
                           icon: Icon(
                             Icons.favorite,
-                            color: (_isFavorite == 1) ? Colors.red : Colors.grey,
+                            color:
+                                (_isFavorite == 1) ? Colors.red : Colors.grey,
                           ),
                           onPressed: () {
-                            setState(() {
-                              _isFavorite = (_isFavorite == 0) ? 1 : 0;
-                            });
+                            _isFavorite = (_isFavorite == 0) ? 1 : 0;
+                            updateFavorite(widget.contactModel);
+                            setState(() {});
                           },
                         ),
                       )
@@ -141,7 +184,7 @@ class _ContactDetailState extends State<ContactDetail> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text("mobile"),
-                       const SizedBox(
+                        const SizedBox(
                           height: 5,
                         ),
                         Text(
@@ -153,7 +196,7 @@ class _ContactDetailState extends State<ContactDetail> {
                   ),
                 ),
               ),
-             const SizedBox(
+              const SizedBox(
                 height: 15,
               ),
               SizedBox(
@@ -164,8 +207,8 @@ class _ContactDetailState extends State<ContactDetail> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                       const Text("e-mail"),
-                       const SizedBox(
+                        const Text("e-mail"),
+                        const SizedBox(
                           height: 5,
                         ),
                         Text(

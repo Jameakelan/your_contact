@@ -16,6 +16,33 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final DatabaseHelper _helper = DatabaseHelper();
 
+  List<ContactModel> contactsModel = [];
+
+  void deleteContact(int id) async {
+
+    int effectRow = await _helper.delete(id);
+
+    if(effectRow > 0) {
+      refreshContact();
+    }
+  }
+
+  void refreshContact() async {
+    contactsModel = await _helper.getContacts();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    refreshContact();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -35,11 +62,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(fontSize: 25),
                     ),
                     ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+
+                       bool? isBack = await Navigator.push(
                             context,
-                            MaterialPageRoute(
+                            MaterialPageRoute<bool>(
                                 builder: (context) => const AddScreen()));
+
+                       if (isBack != null) {
+                         refreshContact();
+                       }
+
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.indigoAccent,
@@ -56,48 +89,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: size.height * 0.8,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: FutureBuilder(
-                    future: _helper.getContacts(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<List<ContactModel>> snapshot) {
-                      if (snapshot.hasData) {
-                        return ListView.builder(
-                          itemCount: snapshot.data?.length,
-                          itemBuilder: (context, index) {
-
-
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 8, top: 8, right: 8, bottom: 4),
-                              child: ContactItem(
-                                title: snapshot.data?[index].name ?? "ไม่พบข้อมูล",
-                                onPressed: () {
-                                  // var contactModel = ContactModel(
-                                  //     name: "SUT",
-                                  //     mobileNo: "0938573643",
-                                  //     email: 'example@gmail.com',
-                                  //     isFavorite: 0);
-
-                                  if (snapshot.data != null) {
-                                    var contactModel = snapshot.data![index];
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ContactDetail(
-                                          contactModel: contactModel,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                onDelete: () {},
+                  child: ListView.builder(
+                    itemCount: contactsModel.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                            left: 8, top: 8, right: 8, bottom: 4),
+                        child: ContactItem(
+                          title: contactsModel[index].name ?? "ไม่พบข้อมูล",
+                          onPressed: () async {
+                            var contactModel = contactsModel[index];
+                           bool? isBack = await Navigator.push(
+                              context,
+                              MaterialPageRoute<bool>(
+                                builder: (context) => ContactDetail(
+                                  contactModel: contactModel,
+                                ),
                               ),
                             );
-                          },
-                        );
-                      }
 
-                      return Container();
+                            if (isBack != null) {
+                              refreshContact();
+                            }
+                          },
+                          onDelete: () {
+                            int? id = contactsModel[index].id;
+
+                            print("id: ${id}");
+
+                            if (id != null) {
+                              deleteContact(id);
+                            }
+                          },
+                        ),
+                      );
                     },
                   ),
                 ),
